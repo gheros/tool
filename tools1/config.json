@@ -1,7 +1,7 @@
 {
-    "mongoHost": "47.75.144.55",
+    "mongoHost": "localhost",
     "mongouname":"explorer",
-    "mongopasswd":"HiSnY7pLSbYEtYz15o8OCUdLZjH5dp",
+    "mongopasswd":"localhost",
     "gethHost": "localhost",
     "gethPort": 8545,
     "blocks": [ {"start": 0, "end": "latest"}],
