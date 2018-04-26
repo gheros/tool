@@ -1,0 +1,13 @@
+{
+    "mongoHost": "192.168.10.92",
+    "mongouname":"explorerv3",
+    "mongopasswd":"moacexplorerv3",
+    "gethHost": "localhost",
+    "gethPort": 8546,
+    "blocks": [ {"start": 0, "end": "latest"}],
+    "skipTransactions": false,
+    "quiet": false,
+    "terminateAtExistingDB": false,
+    "listenOnly": true,
+    "dbname":"testnetv3"
+}

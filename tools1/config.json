@@ -1,0 +1,13 @@
+{
+    "mongoHost": "47.75.144.55",
+    "mongouname":"explorer",
+    "mongopasswd":"HiSnY7pLSbYEtYz15o8OCUdLZjH5dp",
+    "gethHost": "localhost",
+    "gethPort": 8545,
+    "blocks": [ {"start": 0, "end": "latest"}],
+    "skipTransactions": false,
+    "quiet": false,
+    "terminateAtExistingDB": true,
+    "listenOnly": false,
+    "dbname":"blockDB"
+}
