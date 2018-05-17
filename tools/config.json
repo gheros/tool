@@ -1,13 +1,13 @@
 {
     "mongoHost": "localhost",
-    "mongouname":"explorerv3",
-    "mongopasswd":"localhost",
-    "gethHost": "localhost",
-    "gethPort": 8546,
-    "blocks": [ {"start": 0, "end": "latest"}],
+    "mongouname":"",
+    "mongopasswd":"",
+    "gethHost": "192.168.58.128",
+    "gethPort": 8545,
+    "blocks": [ {"start": 59804, "end": 80574}],
     "skipTransactions": false,
     "quiet": false,
     "terminateAtExistingDB": false,
     "listenOnly": true,
-    "dbname":"testnetv3"
+    "dbname":"localDB"
 }

@@ -6,7 +6,7 @@ require( '../db-internal.js' );
 
 var http = require('http');
 var Chain3 = require('chain3');
-var chain3 = new Chain3(new Chain3.providers.HttpProvider("http://localhost:8545"));
+var chain3 = new Chain3(new Chain3.providers.HttpProvider("http://192.168.58.128:8545"));
 
 var mongoose = require( 'mongoose' );
 var InternalTx     = mongoose.model( 'InternalTransaction' );
@@ -24,7 +24,7 @@ function grabInternalTxs(batchNum, batchSize) {
     "id":' + batchNum + '}';
 
   var post_options = {
-      host: 'localhost',
+      host: '192.168.58.128',
       port: '8545',
       path: '/',
       method: 'POST',

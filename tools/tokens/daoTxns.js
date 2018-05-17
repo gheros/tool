@@ -20,7 +20,9 @@ var InternalTx     = mongoose.model( 'InternalTransaction' );
 if (typeof chain3 !== "undefined") {
   chain3 = new Chain3(chain3.currentProvider);
 } else {
-  chain3 = new Chain3(new Chain3.providers.HttpProvider("http://localhost:8545"));
+	chain3 = new Chain3(new Chain3.providers.HttpProvider('http://' + config.gethHost.toString() + ':' +
+	        config.gethPort.toString()));
+  // chain3 = new Chain3(new Chain3.providers.HttpProvider("http://localhost:8545"));
 }
 
 if (chain3.isConnected()) 
