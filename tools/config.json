@@ -2,7 +2,7 @@
     "mongoHost": "localhost",
     "mongouname":"",
     "mongopasswd":"",
-    "gethHost": "192.168.58.128",
+    "gethHost": "192.168.58.130",
     "gethPort": 8545,
     "blocks": [ {"start": 59804, "end": 80574}],
     "skipTransactions": false,

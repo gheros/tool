@@ -71,6 +71,14 @@ var TokenTransfer = new Schema(
         "timestamp": Number
     });
 
+var Holder = new Schema(
+		{
+			"address": String,
+			"quantity": String,
+			"contractAddress": String,
+			"percentage":String
+		});
+
 var Token = new Schema(
 		{
 		    "fullName": {type: String, index: {unique: true}},
@@ -86,13 +94,7 @@ var Token = new Schema(
 		    "type": Number
 });
 
-var Holder = new Schema(
-		{
-			"address": String,
-			"quantity": String,
-			"contractAddress": Number,
-			"percentage":String
-		});
+
 
 mongoose.model('Block', Block);
 mongoose.model('Contract', Contract);

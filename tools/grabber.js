@@ -13,7 +13,7 @@ var Holder = mongoose.model( 'Holder' );
 var inspect = require('util').inspect;
 // var mc = require('./web3relay').mc;
 const ABI = [{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"}];
-var chain3 = new Chain3(new Chain3.providers.HttpProvider("http://192.168.58.128:8545"));
+var chain3 = new Chain3(new Chain3.providers.HttpProvider("http://192.168.58.130:8545"));
 var mc = chain3.mc;
 const ContractStruct = mc.contract(ABI);
 
@@ -215,15 +215,15 @@ var writeTransactionsToDB = function(config, blockData) {
                 txData.gasUsed = currentTxRec.gasUsed;
                 txData.contractAddress = currentTxRec.contractAddress;
             }
-            
+            var tokenData;
             bulkOps.push(txData);
             // 判断发币交易
             if(txData.input && txData.input.length > 20){
+            	tokenData = ContractStruct.at(currentTxRec.contractAddress);
             	console.log("------------contractAddress: " + currentTxRec.contractAddress);
 	            if (txData.to == null) {
 	            	// 发币交易tx
 	            	if (currentTxRec.contractAddress != null && currentTxRec.contractAddress != '') {
-	            		var tokenData = ContractStruct.at(currentTxRec.contractAddress);
 	            		console.log("发币交易+=====" + tokenData.symbol());
 	                	if (tokenData) {
 //	                		tokenInfo.fullName = tokenData.name;  // 全名
@@ -278,6 +278,14 @@ var writeTransactionsToDB = function(config, blockData) {
 	            	}
 	            	
 	            } else {
+	            	const InputDataDecoder = require('ethereum-input-data-decoder');
+	            	const decoder = new InputDataDecoder('./abi.json');
+	            	var data = txData.input;
+	            	const result = decoder.decodeData(data);
+	            	console.log('--------------解析input  decode:' + inspect(result));
+	            	
+	            	
+	            	
 	            	// 代币交易tx
 	            	console.log("------------input: " + txData.input);
 	            	console.log("------------to: " + txData.to);
@@ -319,62 +327,127 @@ var writeTransactionsToDB = function(config, blockData) {
 	                  }
 	                })
 	                
+	                
+	                
+	                
+	                
+	                
+	                
+	                
+	                
 	                // 解析tokenHolders(1. 解析to, new的添加，计算balance,percentage。from和 to old的计算balance,
 	                // 如果当前交易后为0,执行delete)
 	                var fromAddress = txData.from;
-	                var quantity = parseInt(amount)
+	                var currContractAddress = txData.to;
+	                var decimalVal = tokenData.decimals()
+	                var totalSupply = tokenData.totalSupply();
 	    			//用户地址
 	                var fromdata = "0x70a08231" + "000000000000000000000000" + fromAddress.substring(2);
-	                // from 判断balance,为0的执行delete
+	                
 	                var fromAddressBalance = chain3.mc.call({
 	                	to: txData.to,  // 合约地址
 	                	data: fromdata
 	                }, 'latest');
-	                // balanceResult转换成值
-	                if (fromAddressBalance == 0) {
-	                	// 账户余额为0，删除
-	                	Holder.remove({"address": fromAddress, "contractAddress": txData.to}, function(err){
-	                		if (err) {
-	                			console.log(err);
-	                		} else {
-	                			console.log("余额为0的删除成功！");
-	                		}
-	                	});
-	                }
+	                var fromBalance = parseInt(fromAddressBalance.substring(2),16);
 	                
-	                // to判断，new执行新增，old计算balance
-	                Holder.find({address: toAddress, contractAddress: contractAddress}, function (err, result) {
-	                	if (result == null) {
+//	                if (fromBalance == 0) {
+//	                	// 账户余额为0，删除
+//	                	Holder.remove({"address": fromAddress, "contractAddress": txData.to}, function(err){
+//	                		if (err) {
+//	                			console.log(err);
+//	                		} else {
+//	                			console.log("余额为0的删除成功！");
+//	                		}
+//	                	});
+//	                }
+	                console.log("---------fromAddress开始查询");
+	                if (fromBalance != 0) {
+	                	console.log("//////////////////:"+fromBalance / Math.pow(10,decimalVal));
+	                	console.log("//////////////////:"+fromBalance / Math.pow(10,decimalVal)/ totalSupply * 100);
+                		var percentage = Math.round(fromBalance / Math.pow(10,decimalVal) / totalSupply * 100 + "%") + ""; 
+                		
+                		
+	                }
+	                Holder.find({address: fromAddress, contractAddress: currContractAddress}, function (err, result) {
+	                	console.log("---------------fromAddress查询结果:" + result);
+	                	console.log("fromAddress的address--------" + result.address);
+	                	if (result == "" && fromBalance != 0) {
+	                		console.log("fromAddress新增操作");
 	                		// 新增
-	                		var percentage = quantity;
-	                		Holder.insert({"address": toAddress, "quantity": quantity,
-	                			"contractAddress":contractAddress},function(err){
+	                		//var percentage = quantity;
+	                		var fromAddressHolder = {"address": fromAddress, "quantity": fromBalance,
+	                			"contractAddress":currContractAddress, "percentage": percentage};
+	                		new Holder(fromAddressHolder).save(function(err){
 	                			if (err) {
     	                			console.log(err);
     	                		} else {
-    	                			console.log("新增成功！");
+    	                			console.log("fromAddress新增成功！");
+    	                		}
+	                		});
+	                	} else if (result != "" && fromBalance == 0){
+	                		
+    	                	// 账户余额为0，删除
+    	                	Holder.remove({"address": fromAddress, "contractAddress": currContractAddress}, function(err){
+    	                		if (err) {
+    	                			console.log(err);
+    	                		} else {
+    	                			console.log("fromAddress余额为0的删除成功！");
+    	                		}
+    	                	});
+	                	} else if (result != "" && fromBalance != 0){
+	                		console.log("fromAddress修改操作");
+    	                	// 存在且余额不为0, 更新余额
+    	                	Holder.update({"address": fromAddress, "contractAddress": currContractAddress}, {$set: {"quantity": fromBalance,"percentage": percentage}}, function(err){
+    	                		if (err) {
+    	                			console.log(err);
+    	                		} else {
+    	                			console.log("fromAddress更新余额成功！");
+    	                		}
+    	                	});
+	                	}
+	                	
+	                });
+	                
+	                var todata = "0x70a08231" + "000000000000000000000000" + toAddress.substring(2);
+            		var toAddressBalance = chain3.mc.call({
+	                	to: txData.to,  // 合约地址
+	                	data: todata
+	                }, 'latest');
+	                var toBalance = parseInt(toAddressBalance.substring(2),16);
+	                if (toBalance != 0) {
+                		var percentage = Math.round(toBalance / Math.pow(10,decimalVal) / totalSupply * 100 + "%") + ""; 
+	                }
+	                // to判断，new执行新增，old计算balance
+	                console.log("---------toAddress查询开始");
+	                Holder.find({address: toAddress, contractAddress: currContractAddress}, function (err, result) {
+	                	console.log("---------------toAddress的result:" + result);
+	                	console.log("---------------toAddress的address:" + result.address);
+	                	
+	                	if (result.address == "" && toBalance != 0) {
+	                		console.log("---------------toAddress新增开始");
+	                		// 新增
+	                		//var percentage = quantity;
+	                		var newfromHolder = {"address": toAddress, "quantity": toBalance,
+	                			"contractAddress":currContractAddress, "percentage": percentage}
+	                		new Holder(newfromHolder).save(function(err){
+	                			if (err) {
+    	                			console.log(err);
+    	                		} else {
+    	                			console.log("toAddress新增成功！");
     	                		}
 	                		});
 	                		
 	                		
-	                	} else {
-	                		var todata = "0x70a08231" + "000000000000000000000000" + toAddress.substring(2);
-	                		// 判断balance,为0的执行delete
-	                		var toBalance = chain3.mc.call({
-	    	                	to: txData.to,  // 合约地址
-	    	                	data: todata
-	    	                }, 'latest');
-	    	                // balanceResult转换成值
-	    	                if (toBalance == 0) {
-	    	                	// 账户余额为0，删除
-	    	                	Holder.remove({"address": fromAddress, "contractAddress": txData.to}, function(err){
-	    	                		if (err) {
-	    	                			console.log(err);
-	    	                		} else {
-	    	                			console.log("余额为0的删除成功！");
-	    	                		}
-	    	                	});
-	    	                }
+	                	} else if (result.address != "" && toBalance != 0){
+	                		console.log("---------------toAddress修改开始");
+	                		// 存在且余额不为0, 更新余额
+    	                	Holder.update({"address": toAddress, "contractAddress": currContractAddress}, {$set: {"quantity": toBalance,"percentage": percentage}}, function(err){
+    	                		if (err) {
+    	                			console.log(err);
+    	                		} else {
+    	                			console.log("toAddress更新余额成功！");
+    	                		}
+    	                	});
 	                	}
 	                	
 	                });
